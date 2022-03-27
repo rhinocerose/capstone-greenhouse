@@ -1,5 +1,6 @@
 from collections import deque
 from datetime import datetime, timedelta
+import flask
 from flask import request, Flask
 import plotly.graph_objs as go
 from dash import Dash
@@ -20,6 +21,7 @@ app = Dash(__name__, server=server, external_stylesheets=external_stylesheets)
 app.layout = html.Div(
     children=[
     html.H1(children='Greenhouse Dash'),
+    html.Div(id='live-update-text'),
 
     html.Div([
         html.Div([
@@ -51,18 +53,19 @@ app.layout = html.Div(
 )
 
 
-# @app.callback(Output('live-update-text', 'children'),
-#               Input('interval-component', 'n_intervals'))
-# def update_metrics(n):
-#     data = buffer[-1]
-#     style = {'padding': '5px', 'fontSize': '16px'}
-#     return [
-#         html.Span('Timestamp'.format(data['timestamp']), style=style),
-#         html.Span('CO2: {0:.2f}'.format(data['co2']), style=style),
-#         html.Span('Light: {0:.2f}'.format(data['light']), style=style),
-#         html.Span('Temperature: {0:0.2f}'.format(data['temperature']), style=style),
-#         html.Span('Humidity: {0:.2f}'.format(data['humidity']), style=style)
-#     ]
+@app.callback(Output('live-update-text', 'children'),
+              Input('interval-component', 'n_intervals'))
+def update_metrics(n):
+    data = buffer[-1]
+    style = {'padding': '5px', 'fontSize': '16px'}
+    return [
+        html.H5('Last Updated:'),
+        html.Span('Timestamp: {0}'.format(data['timestamp'].strftime("%m/%d/%Y, %H:%M:%S")), style=style),
+        html.Span('CO2: {0:.2f}'.format(data['co2']), style=style),
+        html.Span('Light: {0:.2f}'.format(data['light']), style=style),
+        html.Span('Temperature: {0:0.2f}'.format(data['temperature']), style=style),
+        html.Span('Humidity: {0:.2f}'.format(data['humidity']), style=style)
+    ]
 
 
 @app.callback(Output('co2-graph', 'figure'),
@@ -97,7 +100,6 @@ def make_graph(data, data_type):
     param = data[data_type]
     time = data['timestamp']
     std_dev = np.std(data[data_type])
-    moving_average = data[data_type].rolling(window =20).mean()
 
     if data_type == 'co2':
         line_name = 'CO2'
@@ -123,15 +125,6 @@ def make_graph(data, data_type):
             y=param,
             mode='lines',
             line=dict(color='rgb(31, 119, 180)'),
-            showlegend=False
-        ),
-        go.Scatter(
-            name='Moving Average',
-            x=time,
-            y = moving_average,
-            mode='lines',
-            marker=dict(color="#1444"),
-            line=dict(width=0),
             showlegend=False
         ),
         go.Scatter(
@@ -237,4 +230,4 @@ def fill_data():
 
 if __name__ == '__main__':
     fill_data()
-    app.run_server(debug=True)
+    app.run_server(debug=True, host='0.0.0.0')
