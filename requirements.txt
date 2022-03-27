@@ -1,8 +1,5 @@
 dash
-dash_bootstrap_components
-dash_daq
 flask
 plotly
-pyorbital
-pandas
 pymongo
+numpy
