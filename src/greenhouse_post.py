@@ -97,6 +97,7 @@ def make_graph(data, data_type):
     param = data[data_type]
     time = data['timestamp']
     std_dev = np.std(data[data_type])
+    moving_average = data[data_type].rolling(window =20).mean()
 
     if data_type == 'co2':
         line_name = 'CO2'
@@ -122,6 +123,15 @@ def make_graph(data, data_type):
             y=param,
             mode='lines',
             line=dict(color='rgb(31, 119, 180)'),
+            showlegend=False
+        ),
+        go.Scatter(
+            name='Moving Average',
+            x=time,
+            y = moving_average,
+            mode='lines',
+            marker=dict(color="#1444"),
+            line=dict(width=0),
             showlegend=False
         ),
         go.Scatter(
